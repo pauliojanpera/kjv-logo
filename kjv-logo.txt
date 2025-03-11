@@ -1,3 +1,101 @@
+===== README.md =====
+
+\# KJV Logo Coloring
+
+A simple web application for coloring the KJV logo SVG. Users can reassign predefined color categories to different elements of the logo, with the SVG dynamically updating based on their selections. Built with TypeScript, this project leverages modern web standards and includes offline support via a service worker.
+
+\#\# Features
+- Display and scale the \`kjv-logo.svg\` to fit the browser window.
+- Six fixed color categories (dark blue, light blue, transparent, black, yellow, green) assignable to SVG elements.
+- Interactive UI with multi-select dropdowns for color reassignment.
+- Offline caching using a service worker.
+- TypeScript-based with strict type checking.
+
+\#\# Prerequisites
+- \[Node.js\](https://nodejs.org/) (v16 or later recommended)
+- \[pnpm\](https://pnpm.io/) (installed globally: \`npm install -g pnpm\`)
+
+\#\# Installation
+1. \*\*Clone the repository\*\*:
+   \`\`\`bash
+   git clone <repository-url>
+   cd kjv-logo-coloring
+   \`\`\`
+
+2. \*\*Install dependencies\*\*:
+   \`\`\`bash
+   pnpm install
+   \`\`\`
+
+\#\# Usage
+1. \*\*Build the project\*\*:
+   \`\`\`bash
+   pnpm run build
+   \`\`\`
+   This compiles the TypeScript files (\`.mts\`) to JavaScript (\`.mjs\`) and adjusts the service worker output.
+
+2. \*\*Serve the application\*\*:
+   Start the static server to view the app:
+   \`\`\`bash
+   pnpm start
+   \`\`\`
+   Open your browser to \`http://localhost:8080\`.
+
+3. \*\*Interact with the app\*\*:
+   - The SVG will load and scale to fit the window.
+   - Use the dropdowns under \`#color-controls\` to reassign colors to SVG elements (e.g., move \`#waves\` from dark blue to yellow).
+   - Changes update the SVG in real-time.
+
+4. \*\*Deploy (optional)\*\*:
+   \`\`\`bash
+   pnpm run deploy "Your commit message"
+   \`\`\`
+   This builds the project, commits changes, and pushes to the \`main\` branch. Adjust \`scripts/deploy.sh\` if your remote or branch differs.
+
+\#\# Project Structure
+\`\`\`
+kjv-logo-coloring/
+├── public/              # Static assets
+│   ├── data/            # SVG file location
+│   │   └── kjv-logo.svg # The logo SVG
+│   ├── dist/            # Compiled JS (generated)
+│   ├── index.html       # Main HTML entry point
+│   ├── manifest.json    # Web app manifest
+│   └── icon-192.png     # App icon
+├── scripts/             # Build and deploy scripts
+│   └── deploy.sh        # Deployment script
+├── src/                 # Source code
+│   ├── kjv-logo.mts     # Main app logic
+│   └── service-worker.mts # Service worker logic
+├── package.json         # Dependencies and scripts
+├── tsconfig.json        # TypeScript configuration
+└── README.md            # This file
+\`\`\`
+
+\#\# Development
+- \*\*Watch mode\*\*: Rebuilds on file changes:
+  \`\`\`bash
+  pnpm run watch
+  \`\`\`
+- \*\*TypeScript\*\*: Uses \`module: "NodeNext"\` and \`target: "esnext"\` with strict type checking.
+- \*\*Dependencies\*\*:
+  - \`typescript\`: For compilation.
+  - \`tsc-alias\`: Resolves \`@/*\` aliases in \`src/\`.
+  - \`nodemon\`: Watches for changes in development.
+  - \`http-server\`: Serves the static app locally.
+
+\#\# Notes
+- The app relies on \`kjv-logo.svg\` having elements matching the IDs in \`COLOR_GROUPS\` (\`#waves\`, \`#sky\`, etc.).
+- Colors are fixed but can be reassigned to any SVG element via the UI.
+- Offline support is provided by the service worker, caching the SVG, HTML, and JS.
+
+\#\# License
+This project is unlicensed by default. Add a \`LICENSE\` file if you wish to specify terms.
+
+\#\# Contributing
+Feel free to fork and submit pull requests or open issues for bugs/features!
+-----
+
 ===== package.json =====
 
 {
@@ -10,16 +108,17 @@
     "deploy": "./scripts/deploy.sh",
     "fetch": "./scripts/fetch_events.sh",
     "watch": "nodemon -e mts,json,html,png,sh --exec pnpm run build",
-    "report": "files.sh package.json tsconfig.json scripts/ src public/manifest.json public/index.html > kjv-logo.txt"
+    "report": "./scripts/files.sh README.md package.json tsconfig.json scripts/ src public/manifest.json public/index.html > kjv-logo.txt",
+    "start": "http-server public -P http://localhost:8080?"
   },
   "dependencies": {},
   "devDependencies": {
     "typescript": "^5.7.3",
     "tsc-alias": "^1.8.10",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "http-server": "^14.1.1"
   }
 }
-
 -----
 
 ===== tsconfig.json =====
@@ -43,6 +142,81 @@
   "exclude": []                        // Exclude unnecessary files (e.g., test files, node_modules)
 }
 
+-----
+
+===== scripts/files.sh =====
+
+#!/bin/bash
+
+# Default output is stdout (empty string means stdout in redirection), default pattern is all files
+OUTPUT_FILE=""
+FILE_PATTERNS=("*")  # Default to all files
+
+# Usage message
+usage() {
+    echo "Usage: $0 [-o output_file] [-p pattern1 pattern2 ...] [files_or_directories...]"
+    echo "  -o: Specify output file (default: stdout)"
+    echo "  -p: File patterns to match (default: *)"
+    echo "  files_or_directories: Files and/or directories to process (default: current directory)"
+    exit 1
+}
+
+# Parse command-line options
+while getopts "o:p:" opt; do
+    case $opt in
+        o) OUTPUT_FILE="$OPTARG" ;;
+        p) IFS=' ' read -r -a FILE_PATTERNS <<< "$OPTARG" ;;
+        ?) usage ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+# If no arguments provided, default to current directory
+if [ $# -eq 0 ]; then
+    set -- "."
+fi
+
+# Build the find command with multiple patterns
+FIND_ARGS=()
+for pattern in "${FILE_PATTERNS[@]}"; do
+    FIND_ARGS+=(-name "$pattern")
+    if [ "$pattern" != "${FILE_PATTERNS[-1]}" ]; then
+        FIND_ARGS+=(-o)
+    fi
+done
+
+# Function to process a single path (file or directory)
+process_path() {
+    local path="$1"
+    if [ -f "$path" ]; then
+        # If it's a file, process it directly
+        echo -e "===== $path =====\n"
+        cat "$path"
+        echo -e "\n-----\n"
+    elif [ -d "$path" ]; then
+        # If it's a directory, use find
+        find "$path" -type f \( "${FIND_ARGS[@]}" \) -print0 | \
+            xargs -0 -I {} /bin/bash -c 'echo -e "===== {} =====\n"; cat "{}"; echo -e "\n-----\n"'
+    else
+        echo "Warning: Skipping $path - not a file or directory" >&2
+    fi
+}
+
+# Process all provided paths
+if [ -z "$OUTPUT_FILE" ]; then
+    # Output to stdout
+    for path in "$@"; do
+        process_path "$path"
+    done
+else
+    # Output to file
+    {
+        for path in "$@"; do
+            process_path "$path"
+        done
+    } > "$OUTPUT_FILE"
+    echo "Combined files written to $OUTPUT_FILE"
+fi
 -----
 
 ===== scripts/deploy.sh =====
@@ -71,372 +245,179 @@ const URLS_TO_CACHE = [
     "icon-192.png",
 ];
 
-self.addEventListener("install", (event) => {
+self.addEventListener("install", (event: ExtendableEvent): void => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(URLS_TO_CACHE))
+        caches.open(CACHE_NAME).then((cache: Cache) => cache.addAll(URLS_TO_CACHE))
     );
 });
 
-self.addEventListener("fetch", (event) => {
-    event.respondWith((async () => {
-        try {
-            const response = await fetch(event.request);
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then(
-                (cache) => {
+self.addEventListener("fetch", (event: FetchEvent): void => {
+    event.respondWith(
+        (async (): Promise<Response> => {
+            try {
+                const response = await fetch(event.request);
+                const responseClone = response.clone();
+                caches.open(CACHE_NAME).then((cache: Cache) => {
                     cache.put(event.request, responseClone);
                 });
-            return response;
-        } catch (e) {
-            // If network fails, try to return a cached response
-            return await caches.match(event.request)
-                ?? new Response('Offline content unavailable', {
-                    status: 503,
-                    statusText: 'Service Unavailable',
-                    headers: { 'Content-Type': 'text/plain' }
-                });
-        }
-    })());
+                return response;
+            } catch (e) {
+                // If network fails, try to return a cached response
+                return await caches.match(event.request)
+                    ?? new Response('Offline content unavailable', {
+                        status: 503,
+                        statusText: 'Service Unavailable',
+                        headers: { 'Content-Type': 'text/plain' }
+                    });
+            }
+        })());
 });
 -----
 
 ===== src/kjv-logo.mts =====
 
-const DATA_URL = "./data/kjv-logo.svg";
+/// <reference lib="dom" />
 
-type OrienteeringEvent = {
-    uuid: string;
-    startDateTime: number;
-    endDateTime: number;
-    name: string;
-    organizerName: string;
-    locationDescription: string;
-    locationCoordinates: {
-        lat: number;
-        lon: number;
-    }
+const DATA_URL: string = "./data/kjv-logo.svg";
+
+// Define the color groups with their initial element IDs
+interface ColorGroups {
+    [color: string]: string[];
 }
 
-type OrienteeringEventFilterSettings = {
-    dateFilter?: 'past' | 'future';
-    nameFilter?: string;
-    organizerFilter?: string[];
+const COLOR_GROUPS: ColorGroups = {
+    "#434b72ff": ["#waves"],           // Dark blue
+    "#bfd5e2ff": ["#sky"],             // Light blue
+    "#00000000": ["#lettergap", "#garlandgap"], // Transparent
+    "#231f20ff": ["#letterborder", "#garlandborder", "#arcborder"], // Black
+    "#f3df59ff": ["#yearbackground", "#higherarc", "#lowerarc", "#letters"], // Yellow
+    "#689674ff": ["#leaves"]           // Green
 };
 
-function saveFilterSettings(filters: OrienteeringEventFilterSettings) {
-    localStorage.setItem("orienteeringEventFilters", JSON.stringify(filters));
+// Persistent state for color assignments
+let colorGroups: ColorGroups = { ...COLOR_GROUPS }; // Mutable copy of initial state
+let colorSelects: Map<string, HTMLSelectElement> = new Map(); // Store select elements by color
+
+// Load and display the SVG
+async function loadSVG(): Promise<SVGSVGElement> {
+    const response: Response = await fetch(DATA_URL);
+    if (!response.ok) throw new Error("Failed to fetch SVG");
+    const svgText: string = await response.text();
+    const parser: DOMParser = new DOMParser();
+    const svgDoc: Document = parser.parseFromString(svgText, "image/svg+xml");
+    const svgElement = svgDoc.documentElement as unknown as SVGSVGElement;
+
+    const container: HTMLElement = document.getElementById("svg-container")!;
+    container.appendChild(svgElement);
+
+    // Ensure SVG scales properly
+    svgElement.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    svgElement.removeAttribute("width"); // Let CSS handle sizing
+    svgElement.removeAttribute("height");
+
+    return svgElement;
 }
 
-function loadFilterSettings(): OrienteeringEventFilterSettings {
-    const storedFilters = localStorage.getItem("orienteeringEventFilters");
-    return storedFilters ? JSON.parse(storedFilters) : {};
-}
-
-function restoreFilterUI() {
-    const filters = loadFilterSettings();
-
-    if (filters.dateFilter) {
-        (document.getElementById("date-filter") as HTMLSelectElement).value = filters.dateFilter;
-    }
-    if (filters.nameFilter) {
-        (document.getElementById("name-filter") as HTMLInputElement).value = filters.nameFilter;
-    }
-    if (filters.organizerFilter) {
-        const select = document.getElementById("organizer-filter") as HTMLSelectElement;
-        Array.from(select.options).forEach(option => {
-            option.selected = filters.organizerFilter!.includes(option.value);
-        });
-    }
-}
-
-async function* filterSettings() {
-    const filters: OrienteeringEventFilterSettings = loadFilterSettings();
-
-    let resolve: (f: OrienteeringEventFilterSettings) => void;
-    document.getElementById("date-filter")!.onchange = (e) => {
-        filters.dateFilter = ((e.target as HTMLSelectElement)?.value as any) || undefined;
-        resolve?.(filters);
-    };
-    document.getElementById("name-filter")!.oninput = (e) => {
-        filters.nameFilter = (e.target as HTMLInputElement)?.value.toLowerCase().trim() || undefined;
-        resolve?.(filters);
-    };
-    document.getElementById("organizer-filter")!.onchange = (e) => {
-        const select = e.target as HTMLSelectElement;
-        const selectedOrganizers = Array.from(select.selectedOptions).map(option => option.value);
-        filters.organizerFilter = selectedOrganizers.length > 0 ? selectedOrganizers : undefined;
-        resolve?.(filters);
-    };
-    yield filters;
-    for (; ;)
-        yield new Promise<OrienteeringEventFilterSettings>(_resolve => resolve = _resolve)
-            .then((filters) => {
-                saveFilterSettings(filters);
-                return filters;
-            });
-}
-
-async function loadData() {
-    const contentDiv = document.getElementById("content")!;
-    try {
-        const response = await fetch(DATA_URL);
-        if (!response.ok) throw new Error("Failed to fetch data");
-        const data = await response.json();
-
-        populateFilters(data);
-        restoreFilterUI();
-        setupMultiSelectToggle();
-
-        for await (const filters of filterSettings()) {
-            renderData(data, filters);
-        }
-    } catch (error) {
-        console.error("Error loading data:", error);
-        contentDiv.innerText = "Failed to load data.";
-    }
-}
-
-function setupMultiSelectToggle() {
-    const organizerPlaceholder = document.getElementById("organizer-placeholder") as HTMLSelectElement;
-    const organizerFilterContainer = document.getElementById("organizer-filter-container") as HTMLDivElement;
-    const organizerFilter = document.getElementById("organizer-filter") as HTMLSelectElement;
-
-    function showFilterPopup() {
-        const rect = organizerPlaceholder.getBoundingClientRect();
-        console.log(rect);
-        organizerFilterContainer.style.display = "block";
-        organizerFilterContainer.style.position = "fixed";
-        organizerFilterContainer.style.top = `${rect.bottom + window.scrollY}px`;
-        organizerFilterContainer.style.right = `${window.innerWidth-rect.right + window.scrollX}px`;
-    }
-
-    function adjustDropdownBehavior() {
-        if (window.innerWidth >= 768) {
-            organizerPlaceholder.style.display = "inline-block";
-            organizerFilterContainer.style.display = "none";
-            organizerFilter.setAttribute('size', '20');
-
-            organizerPlaceholder.addEventListener("mousedown", (event) => {
-                event.preventDefault();
-                showFilterPopup();
-            });
-        } else {
-            organizerPlaceholder.style.display = "none";
-            organizerFilterContainer.style.display = "block";
-            organizerFilterContainer.style.position = "static";
-            organizerFilter.setAttribute('size', '1');
-        }
-    }
-
-    adjustDropdownBehavior();
-    window.addEventListener("resize", adjustDropdownBehavior);
-
-    document.addEventListener("click", (event) => {
-        if (!organizerFilterContainer.contains(event.target as Node) && event.target !== organizerPlaceholder) {
-            adjustDropdownBehavior();
-        }
-    });
-}
-
-
-
-function populateFilters(events: { event: OrienteeringEvent }[]) {
-    const organizers = new Set(events.map(({ event }) => event.organizerName));
-
-    const dateFilter = document.getElementById("date-filter")!;
-    [
-        ['past', 'menneet'],
-        ['future', 'tulevat'],
-    ].forEach(([value, textContent]) => {
-        const option = document.createElement("option");
-        option.value = value;
-        option.textContent = textContent;
-        dateFilter.appendChild(option);
-    });
-
-    const organizerFilter = document.getElementById("organizer-filter")!;
-    organizers.forEach(org => {
-        const option = document.createElement("option");
-        option.value = org;
-        option.textContent = org;
-        organizerFilter.appendChild(option);
-    });
-}
-
-function formatDate(date: Date) {
-    return `${date.toLocaleDateString('fi-FI', { weekday: 'short' })}\u00A0${date.getDate()}.${date.getMonth() + 1}. klo\u00A0${date.getHours()}.${String(date.getMinutes()).padStart(2, '0')}`;
-}
-
-function wgs84ToTm35fin(lat: number, lon: number): { northing: number; easting: number } {
-    const a = 6378137.0; // Semi-major axis (WGS84)
-    const f = 1 / 298.257222101; // Flattening (WGS84)
-    const k0 = 0.9996; // Scale factor for TM35FIN
-    const lon0 = 27; // Central meridian for EPSG:3067
-    const falseEasting = 500000; // UTM false easting
-    const falseNorthing = 0; // TM35FIN has no false northing for the northern hemisphere
-
-    const e = Math.sqrt(2 * f - f * f); // First eccentricity
-    const toRad = (deg: number) => deg * Math.PI / 180;
-    const toDeg = (rad: number) => rad * 180 / Math.PI;
-
-    const phi = toRad(lat);
-    const lambda = toRad(lon);
-    const lambda0 = toRad(lon0);
-
-    // Compute N, T, C, A, M for projection
-    const N = a / Math.sqrt(1 - e * e * Math.sin(phi) * Math.sin(phi));
-    const T = Math.tan(phi) * Math.tan(phi);
-    const C = (e * e) / (1 - e * e) * Math.cos(phi) * Math.cos(phi);
-    const A = Math.cos(phi) * (lambda - lambda0);
-
-    // Meridional arc
-    const M = a * (
-        (1 - e * e / 4 - 3 * e ** 4 / 64 - 5 * e ** 6 / 256) * phi
-        - (3 * e ** 2 / 8 + 3 * e ** 4 / 32 + 45 * e ** 6 / 1024) * Math.sin(2 * phi)
-        + (15 * e ** 4 / 256 + 45 * e ** 6 / 1024) * Math.sin(4 * phi)
-        - (35 * e ** 6 / 3072) * Math.sin(6 * phi)
-    );
-
-    // Compute Easting (x)
-    const easting = falseEasting + k0 * N * (
-        A + (1 - T + C) * Math.pow(A, 3) / 6
-        + (5 - 18 * T + T * T + 72 * C - 58 * (e * e) / (1 - e * e)) * Math.pow(A, 5) / 120
-    );
-
-    // Compute Northing (y)
-    const northing = falseNorthing + k0 * (
-        M + N * Math.tan(phi) * (
-            (A * A) / 2 + (5 - T + 9 * C + 4 * C * C) * Math.pow(A, 4) / 24
-            + (61 - 58 * T + T * T + 600 * C - 330 * (e * e) / (1 - e * e)) * Math.pow(A, 6) / 720
-        )
-    );
-
-    return { northing, easting };
-}
-
-function renderData(events: { event: OrienteeringEvent }[], filters: OrienteeringEventFilterSettings) {
-    const tbody = document.querySelector(".event-table tbody")!;
-
-    // Clear existing rows
-    while (tbody.firstChild) {
-        tbody.removeChild(tbody.firstChild);
-    }
-
-    const currentYear = new Date().getFullYear();
-    const currentYearStart = new Date(currentYear, 0).getTime();
-    const nextYearStart = new Date(currentYear + 1, 0).getTime();
-
-    let previousStartDateTime: number | undefined;
-
-    events.filter(({ event }) => {
-        return (
-            event.startDateTime >= currentYearStart &&
-            event.endDateTime <= nextYearStart &&
-            (!filters.dateFilter
-                || (filters.dateFilter === 'past' && event.startDateTime < Date.now())
-                || (filters.dateFilter === 'future' && event.startDateTime > Date.now() - 24 * 60 * 60 * 1000)
-            ) &&
-            (!filters.nameFilter || event.name.toLowerCase().includes(filters.nameFilter)) &&
-            (!filters.organizerFilter || filters.organizerFilter.includes(event.organizerName))
-        );
-    }).forEach(({ event }) => {
-        const dayOfWeek = new Date(event.startDateTime)
-            .toLocaleDateString('en-US', { weekday: 'long' })
-            .toLowerCase();
-
-        const row = document.createElement("tr");
-        row.classList.add("event-row");
-        row.classList.add(dayOfWeek); // Assign CSS class based on the day of the week
-
-        const dateCell = document.createElement("td");
-        dateCell.classList.add("date");
-        if (previousStartDateTime !== event.startDateTime) {
-            dateCell.textContent = formatDate(new Date(event.startDateTime));
-        }
-
-        const eventCell = document.createElement("td");
-        eventCell.classList.add("event");
-        eventCell.textContent = event.name.replace(/\s/g, ' ');
-
-        const organizerCell = document.createElement("td");
-        organizerCell.classList.add("organizer");
-        organizerCell.textContent = event.organizerName;
-
-        row.appendChild(dateCell);
-        row.appendChild(eventCell);
-        row.appendChild(organizerCell);
-
-        tbody.appendChild(row);
-
-        // Create an expandable row but keep it hidden initially
-        const expandedRow = document.createElement("tr");
-        expandedRow.classList.add("expanded-row");
-        expandedRow.style.display = "none"; // Initially hidden
-
-        const expandedCell = document.createElement("td");
-        expandedCell.colSpan = 3; // Spanning all columns
-
-        // Additional information content
-        const expandedContent = document.createElement("div");
-        expandedContent.classList.add("expanded-content");
-
-        if (event.locationDescription || event.locationCoordinates) {
-            const locationInfo = document.createElement("div");
-            const locationTitle = document.createElement("div");
-            locationTitle.textContent = `Opastuksen alku, lähtöpaikan osoite tai muu sijainti: `;
-            const locationDescription = document.createElement("div");
-            locationDescription.classList.add('location-description');
-            locationDescription.textContent = event.locationDescription;
-            locationInfo.appendChild(locationTitle);
-            locationInfo.appendChild(locationDescription);
-            if (event.locationCoordinates) {
-                const { northing, easting } = wgs84ToTm35fin(event.locationCoordinates.lat, event.locationCoordinates.lon);
-                const mapLink = document.createElement("a");
-                mapLink.href = `https://asiointi.maanmittauslaitos.fi/karttapaikka/?lang=fi&share=customMarker&n=${northing.toFixed(2)}&e=${easting.toFixed(2)}&title=${encodeURIComponent(event.name)}&zoom=6&layers=W3siaWQiOjIsIm9wYWNpdHkiOjEwMH1d-z`;
-                mapLink.target = "_blank";
-                mapLink.textContent = "🌍\u00A0Näytä\u00A0kartalla";
-                mapLink.classList.add("button");
-                locationDescription.appendChild(mapLink);
-            }
-            expandedContent.appendChild(locationInfo);
-        }
-
-        const timeInfo = document.createElement("div");
-        const startTime = new Date(event.startDateTime);
-        const endTime = new Date(event.endDateTime);
-        timeInfo.textContent = `Tapahtuma jatkuu ${formatDate(endTime)} saakka.`;
-        expandedContent.appendChild(timeInfo);
-
-        const eventPageLinkInfo = document.createElement("div");
-        eventPageLinkInfo.classList.add('event-page-link');
-        eventPageLinkInfo.appendChild(Object.assign(document.createElement('a'), {
-            href: `https://www.rastilippu.fi/kuntorastit/tapahtuma/${event.uuid}`,
-            target: '_blank',
-            textContent: '📌 Tapahtumanjärjestäjän ilmoitus',
-        }));
-        expandedContent.appendChild(eventPageLinkInfo);
-
-        expandedCell.appendChild(expandedContent);
-        expandedRow.appendChild(expandedCell);
-        tbody.appendChild(expandedRow);
-
-        // Toggle expansion on row click
-        row.addEventListener("click", () => {
-            if (expandedRow.style.display === "none") {
-                // Close any other open row first
-                document.querySelectorAll(".expanded-row").forEach(el => (el as HTMLElement).style.display = "none");
-                expandedRow.style.display = "table-row";
+// Update the fill and stroke of SVG elements based on color groups
+function updateElementColors(svg: SVGSVGElement, groups: ColorGroups = colorGroups): void {
+    console.log("Updating SVG with color groups:", groups); // Log the current state
+    Object.entries(groups).forEach(([color, ids]: [string, string[]]) => {
+        ids.forEach((id: string) => {
+            const element: SVGElement | null = svg.querySelector(id);
+            if (element) {
+                console.log(`Setting ${id} to color ${color}`); // Log each update
+                element.setAttribute("fill", color);
+                element.setAttribute("stroke", color);
             } else {
-                expandedRow.style.display = "none";
+                console.warn(`Element ${id} not found in SVG`); // Warn if ID is missing
             }
         });
-
-        previousStartDateTime = event.startDateTime;
     });
 }
 
-document.addEventListener("DOMContentLoaded", loadData);
+// Update the UI to reflect current colorGroups state
+function updateColorControls(): void {
+    colorSelects.forEach((select: HTMLSelectElement, color: string) => {
+        const currentIds: string[] = colorGroups[color] || [];
+        Array.from(select.options).forEach((option: HTMLOptionElement) => {
+            option.selected = currentIds.includes(option.value);
+        });
+    });
+}
 
+// Create the color reassignment UI (called only once)
+function createColorControls(svg: SVGSVGElement): void {
+    const controls: HTMLElement = document.getElementById("color-controls")!;
+    controls.innerHTML = ""; // Clear existing controls
+
+    const allIds: string[] = Object.values(COLOR_GROUPS).flat(); // All possible element IDs
+
+    Object.entries(colorGroups).forEach(([color, ids]: [string, string[]]) => {
+        const groupDiv: HTMLDivElement = document.createElement("div");
+        groupDiv.className = "color-group";
+
+        const colorSwatch: HTMLDivElement = document.createElement("div");
+        colorSwatch.style.width = "20px";
+        colorSwatch.style.height = "20px";
+        colorSwatch.style.backgroundColor = color;
+        colorSwatch.style.display = "inline-block";
+        colorSwatch.style.marginRight = "10px";
+
+        const select: HTMLSelectElement = document.createElement("select");
+        select.multiple = true;
+        select.size = 5;
+
+        // Populate with all possible elements
+        allIds.forEach((id: string) => {
+            const option: HTMLOptionElement = document.createElement("option");
+            option.value = id;
+            option.textContent = id;
+            option.selected = ids.includes(id);
+            select.appendChild(option);
+        });
+
+        // Store the select element
+        colorSelects.set(color, select);
+
+        // Update color group on change
+        select.addEventListener("change", () => {
+            const selectedIds: string[] = Array.from(select.selectedOptions).map((opt: HTMLOptionElement) => opt.value);
+            console.log('selectedIds', JSON.stringify(selectedIds));
+            // Update the current color's group
+            colorGroups[color] = selectedIds;
+
+            // Remove selected IDs from other groups to prevent overlap
+            Object.keys(colorGroups).forEach((otherColor: string) => {
+                if (otherColor !== color) {
+                    colorGroups[otherColor] = colorGroups[otherColor].filter((id: string) => !selectedIds.includes(id));
+                }
+            });
+
+            // Update the SVG and UI
+            updateElementColors(svg);
+            updateColorControls(); // Update dropdowns without rebuilding
+        });
+
+        groupDiv.appendChild(colorSwatch);
+        groupDiv.appendChild(select);
+        controls.appendChild(groupDiv);
+    });
+}
+
+// Initialize the application
+async function initialize(): Promise<void> {
+    try {
+        const svg: SVGSVGElement = await loadSVG();
+        updateElementColors(svg); // Initial render
+        createColorControls(svg); // Build UI once
+    } catch (error: unknown) {
+        console.error("Error initializing:", error);
+        const container: HTMLElement = document.getElementById("svg-container")!;
+        container.innerText = "Failed to load SVG.";
+    }
+}
+
+document.addEventListener("DOMContentLoaded", initialize);
 -----
 
 ===== public/manifest.json =====
@@ -462,11 +443,10 @@ document.addEventListener("DOMContentLoaded", loadData);
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KJV logo</title>
+    <title>KJV Logo Coloring</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icon-192.png">
     <script type="module" src="dist/kjv-logo.mjs"></script>
@@ -479,28 +459,45 @@ document.addEventListener("DOMContentLoaded", loadData);
 
         body {
             background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 10.45%, var(--tertiary-color) 41.35%);
-
-            font-family: Arial, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Open Sans, Helvetica Neue, sans-serif;
-
+            font-family: Arial, sans-serif;
             min-height: 100dvh;
             display: flex;
-            flex-direction: row;
-            justify-content: center;
-            width: 100%;
-            max-width: 1024px;
-            margin: 0 auto;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
             box-sizing: border-box;
         }
 
+        #svg-container {
+            max-width: 100%;
+            max-height: 60vh;
+            overflow: auto;
+        }
+
+        #svg-container svg {
+            width: 100%;
+            height: auto;
+        }
+
+        #color-controls {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .color-group {
+            border: 1px solid #231f20ff;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.8);
+        }
     </style>
 </head>
-
 <body>
-    <div id="content">
-
-    </div>
+    <div id="svg-container"></div>
+    <div id="color-controls"></div>
 </body>
-
 </html>
 -----
 

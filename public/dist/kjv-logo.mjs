@@ -20,6 +20,28 @@ async function loadSVG() {
     const parser = new DOMParser();
     const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
     const svgElement = svgDoc.documentElement;
+    // Remove fill and stroke from style attributes of managed elements
+    Object.values(COLOR_GROUPS).flat().forEach((id) => {
+        const element = svgElement.querySelector(id);
+        if (element && element.hasAttribute("style")) {
+            const style = element.getAttribute("style");
+            const styleMap = new Map(style.split(";").map((rule) => {
+                const [key, value] = rule.split(":").map((s) => s.trim());
+                return [key, value];
+            }));
+            styleMap.delete("fill");
+            styleMap.delete("stroke");
+            const newStyle = Array.from(styleMap.entries())
+                .map(([key, value]) => `${key}:${value}`)
+                .join(";");
+            if (newStyle) {
+                element.setAttribute("style", newStyle);
+            }
+            else {
+                element.removeAttribute("style");
+            }
+        }
+    });
     const container = document.getElementById("svg-container");
     container.appendChild(svgElement);
     // Ensure SVG scales properly

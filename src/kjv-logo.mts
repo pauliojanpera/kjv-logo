@@ -29,6 +29,30 @@ async function loadSVG(): Promise<SVGSVGElement> {
     const svgDoc: Document = parser.parseFromString(svgText, "image/svg+xml");
     const svgElement = svgDoc.documentElement as unknown as SVGSVGElement;
 
+    // Remove fill and stroke from style attributes of managed elements
+    Object.values(COLOR_GROUPS).flat().forEach((id: string) => {
+        const element: SVGElement | null = svgElement.querySelector(id);
+        if (element && element.hasAttribute("style")) {
+            const style = element.getAttribute("style")!;
+            const styleMap = new Map(
+                style.split(";").map((rule) => {
+                    const [key, value] = rule.split(":").map((s) => s.trim());
+                    return [key, value];
+                })
+            );
+            styleMap.delete("fill");
+            styleMap.delete("stroke");
+            const newStyle = Array.from(styleMap.entries())
+                .map(([key, value]) => `${key}:${value}`)
+                .join(";");
+            if (newStyle) {
+                element.setAttribute("style", newStyle);
+            } else {
+                element.removeAttribute("style");
+            }
+        }
+    });
+
     const container: HTMLElement = document.getElementById("svg-container")!;
     container.appendChild(svgElement);
 
