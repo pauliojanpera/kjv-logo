@@ -2,7 +2,7 @@ const CACHE_NAME = "kjv-logo";
 const URLS_TO_CACHE = [
     "index.html",
     "dist/kjv-logo.mjs",
-    "data/template.svg",
+    "data/kjv-logo.svg",
     "icon-192.png",
 ];
 self.addEventListener("install", (event) => {

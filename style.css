@@ -1,0 +1,18 @@
+#waves {
+  fill: #434b72ff; stroke: #434b72ff; // dark blue
+}
+#sky {
+  fill: #bfd5e2ff; fill: #bfd5e2ff; // light blue
+}
+#lettergap, #garlandgap {
+  fill: #00000000; stroke: #00000000; // transparent
+}
+#letterborder, #garlandborder, #arcborder {
+  fill: #231f20ff; stroke: #231f20ff;// black
+}
+#yearbackground, #higherarc, #lowerarc, #letters {
+  fill: #f3df59ff; stroke: #f3df59ff; // yellow
+}
+#leaves {
+  fill: #689674ff; stroke: #689674ff; // green
+}
