@@ -1,14 +1,14 @@
 {
   "name": "kjv-logo",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "KJV logo",
   "private": false,
   "scripts": {
-    "build": "tsc && tsc-alias && sed -i '/export {};$/d' public/dist/service-worker.mjs && mv public/dist/service-worker.mjs public/service-worker.js",
+    "build": "tsc && tsc-alias && node ./scripts/postbuild.js",
     "deploy": "./scripts/deploy.sh",
     "fetch": "./scripts/fetch_events.sh",
     "watch": "nodemon -e mts,json,html,png,sh --exec pnpm run build",
-    "report": "./scripts/files.sh README.md package.json tsconfig.json .github/workflows/static.yml scripts/ src public/manifest.json public/index.html > kjv-logo.txt",
+    "report": "./scripts/files.sh README.md REFERENCE.md package.json tsconfig.json .github/workflows/static.yml scripts/ src public/manifest.json public/index.html > kjv-logo.txt",
     "start": "http-server public -P http://localhost:8080?"
   },
   "dependencies": {},

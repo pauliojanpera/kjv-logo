@@ -2,7 +2,8 @@
 export type { };
 declare const self: ServiceWorkerGlobalScope;
 
-const CACHE_NAME = "kjv-logo";
+// Cache name with UUID placeholder (replaced at build time)
+const CACHE_NAME = "kjv-logo-CACHE_UUID";
 const URLS_TO_CACHE = [
     "index.html",
     "dist/kjv-logo.mjs",
@@ -10,12 +11,27 @@ const URLS_TO_CACHE = [
     "icon-192.png",
 ];
 
+// Install event: Cache assets
 self.addEventListener("install", (event: ExtendableEvent): void => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache: Cache) => cache.addAll(URLS_TO_CACHE))
     );
 });
 
+// Activate event: Clean up old caches
+self.addEventListener("activate", (event: ExtendableEvent): void => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames
+                    .filter((name) => name.startsWith("kjv-logo-") && name !== CACHE_NAME)
+                    .map((name) => caches.delete(name))
+            );
+        })
+    );
+});
+
+// Fetch event: Network-first with cache fallback
 self.addEventListener("fetch", (event: FetchEvent): void => {
     event.respondWith(
         (async (): Promise<Response> => {
@@ -27,13 +43,20 @@ self.addEventListener("fetch", (event: FetchEvent): void => {
                 });
                 return response;
             } catch (e) {
-                // If network fails, try to return a cached response
-                return await caches.match(event.request)
-                    ?? new Response('Offline content unavailable', {
+                return await caches.match(event.request) ?? 
+                    new Response('Offline content unavailable', {
                         status: 503,
                         statusText: 'Service Unavailable',
                         headers: { 'Content-Type': 'text/plain' }
                     });
             }
-        })());
+        })()
+    );
+});
+
+// Handle skipWaiting message
+self.addEventListener("message", (event: ExtendableMessageEvent) => {
+    if (event.data && event.data.action === "skipWaiting") {
+        self.skipWaiting();
+    }
 });

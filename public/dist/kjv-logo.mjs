@@ -189,12 +189,43 @@ function showColorPicker(id, svg) {
         }
     };
 }
+// Cache name with UUID placeholder (replaced at build time)
+const CACHE_NAME = "kjv-logo-f22caeef-9caa-417b-a911-a560774857c9";
+// Register service worker with force update
+async function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.register('/service-worker.js', {
+                scope: '/kjv-logo/'
+            });
+            // Force update on new service worker
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                if (newWorker) {
+                    newWorker.addEventListener('statechange', () => {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            newWorker.postMessage({ action: 'skipWaiting' });
+                        }
+                    });
+                }
+            });
+            console.log('Service Worker registered with scope:', registration.scope);
+        }
+        catch (error) {
+            console.error('Service Worker registration failed:', error);
+        }
+    }
+    else {
+        console.warn('Service Workers not supported in this browser');
+    }
+}
 // Initialize the application
 async function initialize() {
     try {
+        await registerServiceWorker();
         svgElement = await loadSVG();
-        updateElementColors(svgElement); // Initial render
-        setupColorPicker(svgElement); // Set up color picker and click handlers
+        updateElementColors(svgElement);
+        setupColorPicker(svgElement);
     }
     catch (error) {
         console.error("Error initializing:", error);

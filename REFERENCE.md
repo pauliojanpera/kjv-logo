@@ -1,57 +1,93 @@
-# Technical Reference: KJV logo coloring application
+# Technical reference: KJV logo coloring application
 *Date: March 11, 2025*  
 *Prepared for: Discussions with Grok 3 (xAI)*
 
 ## Overview
-A TypeScript-based web application for reassigning colors to SVG elements within `kjv-logo.svg`. Key features include real-time SVG updates, offline support via a service worker, and deployment automation using GitHub Actions.
+A TypeScript-powered web app for dynamically reassigning colors to SVG elements in `kjv-logo.svg`. Lean as hell, but built with fierce ambition—real-time interactivity, offline grit, and automated deployment, all in a modern, extensible frame.
 
 ## Core components
 - **Source files**:
-  - `src/kjv-logo.mts`: Loads SVG, manages color assignments, and handles UI interactions.
-  - `src/service-worker.mts`: Implements caching for offline access.
-  - `public/index.html`: Entry point with embedded styles.
-  - `public/data/kjv-logo.svg`: SVG asset with predefined element IDs (e.g., `#waves`, `#sky`). [Note: Present in codebase, omitted here.]
+  - `src/kjv-logo.mts`: Runs SVG loading, color reassignment, UI logic—tight, modular, scalable. Now includes service worker registration.
+  - `src/service-worker.mts`: Caches assets, intercepts fetches—key for offline and data flow, not the whole show.
+  - `public/index.html`: Bare entry with styles and module kicks.
+  - `public/data/kjv-logo.svg`: SVG with IDs (e.g., `#waves`, `#sky`) for precise control. [Omitted here, in codebase.]
 - **Configuration**:
-  - `tsconfig.json`: `target: "esnext"`, `module: "NodeNext"`, `strict: true`.
-  - `package.json`: Defines build (`tsc && tsc-alias`), serve (`http-server`), and deploy scripts.
+  - `tsconfig.json`: `esnext`, `nodenext`, `strict: true`—modern, safe, no compromise.
+  - `package.json`: Lean scripts: build (`tsc && tsc-alias`), serve (`http-server`), deploy—pure efficiency.
 
 ## Implementation details
-- **Color management**:
-  - Fixed palette: 7 colors (`#434b72ff`, `#bfd5e2ff`, `#00000000`, `#231f20ff`, `#f3df59ff`, `#689674ff`, `#ffffffff`).
-  - Initial assignments in `COLOR_GROUPS` (e.g., `#waves: "#434b72ff"`).
-  - Dynamic updates via `updateElementColors`, overriding SVG `fill` and `stroke`.
-- **SVG handling**:
-  - Loaded via `fetch` and parsed with `DOMParser`.
-  - Inline `style` attributes cleaned to ensure programmatic control.
-  - Scaled with `preserveAspectRatio="xMidYMid meet"`.
-- **UI interaction**:
-  - Click events on SVG elements trigger a dialog (`#color-picker`) with color options.
-  - Selected element highlighted with CSS `pulse` animation (red/white cycle).
-  - Transparent color visualized as a checkerboard pattern.
-- **Offline support**:
-  - Service worker caches `index.html`, `dist/kjv-logo.mjs`, `data/kjv-logo.svg`, `icon-192.png`.
-  - Fallback response on network failure: `503 Service Unavailable`.
+- **Dynamic SVG control**:
+  - Fetches `kjv-logo.svg`, parses with `DOMParser`, rewires `fill`/`stroke` live.
+  - Scales via `preserveAspectRatio="xMidYMid meet"`.
+- **Color system**:
+  - 7 colors: `#434b72ff`, `#bfd5e2ff`, `#00000000`, `#231f20ff`, `#f3df59ff`, `#689674ff`, `#ffffffff`.
+  - `COLOR_GROUPS` maps IDs to colors, updated with `updateElementColors`.
+- **UI**:
+  - Click-to-color dialog (`#color-picker`), pulsing highlights, checkerboard transparency—clean, no fluff.
+- **Service worker**:
+  - Registers early in `src/kjv-logo.mts`, caches `index.html`, `dist/kjv-logo.mjs`, `data/kjv-logo.svg`, `icon-192.png`, intercepts fetches.
+  - Network-first, cache fallback—flexible for bigger data roles.
 - **Deployment**:
-  - `scripts/deploy.sh`: Builds, commits, and pushes to `main`.
-  - `.github/workflows/static.yml`: Deploys `public/` to GitHub Pages.
+  - `scripts/deploy.sh`: Builds, ships to `main`.
+  - `.github/workflows/static.yml`: Pushes `public/` to GitHub Pages—automated, relentless.
+
+## Service worker registration
+- **Implementation**:
+  - Added to `src/kjv-logo.mts` with `registerServiceWorker()` function.
+  - Executes on app initialization before SVG loading.
+  - Path: Registers `/service-worker.js` (post-build location).
+  - Scope: `/kjv-logo/` aligns with `manifest.json` `start_url`.
+- **Assumptions**:
+  - Service worker file is moved to `public/service-worker.js` by build script (`package.json`).
+  - Scope matches GitHub Pages deployment context (`/kjv-logo/`).
+  - Early registration ensures offline capability is available before other operations.
+- **Behavior**:
+  - Checks for browser support (`'serviceWorker' in navigator`).
+  - Logs success or failure to console for debugging.
+  - Fallback: Warns if service workers aren’t supported.
+
+## Cache Busting Strategy
+- **Approach**: UUID-based cache naming + forced service worker updates.
+- **Implementation**:
+  - `./scripts/postbuild.js` generates a UUID per build, injects it into `CACHE_NAME` in `service-worker.mts` and `kjv-logo.mts`.
+  - Service worker uses `kjv-logo-<UUID>` as cache name, cleans old caches on activation.
+  - `kjv-logo.mts` forces new service worker to skip waiting and activate immediately.
+- **Build Integration**:
+  - `package.json` `build` script runs `tsc && tsc-alias && node ./scripts/postbuild.js`.
+  - Post-build script handles UUID injection and file cleanup.
+- **Benefits**: Automatic, unique cache per deployment; no manual versioning; ensures fresh content.
+- **Notes**: Old caches persist until activation; users may need a refresh for immediate updates.
+
+## Architectural vision
+Lean but mean—this is built to roar:
+- **Real-time power**: SVG tweaks are the start—think live updates, user-driven customization, data-driven visuals.
+- **Offline backbone**: Service worker keeps it running anywhere, ready for full PWA status.
+- **Extensibility**: TypeScript and ES modules scream for persistence, APIs, multi-user tricks—bring it.
+- **Automation**: GitHub Actions ships it fast, no babysitting.
+- **Lean, not weak**: Small footprint, huge potential—every line’s a launchpad.
 
 ## Build process
 - **Command**: `pnpm run build`.
 - **Steps**: 
-  1. `tsc`: Compiles `.mts` to `.mjs`.
-  2. `tsc-alias`: Resolves `@/*` paths.
-  3. Post-processing: Adjusts service worker output (`public/service-worker.js`).
+  1. `tsc`: `.mts` to `.mjs`.
+  2. `tsc-alias`: Path resolution.
+  3. Post-processes `service-worker.js` for static hosting.
 
 ## Dependencies
-- `typescript`: Compilation.
-- `tsc-alias`: Path resolution.
-- `nodemon`: Watch mode.
-- `http-server`: Local serving.
+- `typescript`: Hardcore compilation.
+- `tsc-alias`: Path smarts.
+- `nodemon`: Dev speed.
+- `http-server`: Local proving ground.
 
 ## Notes
-- Assumes `kjv-logo.svg` exists with required IDs.
-- No tests or persistence implemented—potential extension points.
-- GitHub Pages URL pending deployment configuration.
+- Assumes `kjv-logo.svg` with matching IDs.
+- Service worker registration in `src/kjv-logo.mts`—no delays, tight execution.
+- Untapped: persistence, testing, dynamic data—expansion bait.
 
-## Usage with Grok 3
-Reference this document to discuss enhancements, analyze code snippets, or evaluate architectural decisions. Specify files or features (e.g., "analyze `kjv-logo.mts` SVG logic") for targeted responses.
+## Notes for Grok 3 (Self-Instructions)
+- **Recording Process**: For future enhancements or responses:
+  - Document all significant implementation details, assumptions, and instructions in this `REFERENCE.md`.
+  - Include code snippets, rationale, and usage notes where applicable.
+  - Append new sections or update existing ones (e.g., "Cache Busting Strategy", "Implementation Details") as needed.
+- **Format**: Use clear headings, bullet points, and code blocks for readability.
+- **Scope**: Focus on technical accuracy and alignment with the project’s lean, modern ethos.
