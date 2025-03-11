@@ -82,9 +82,8 @@ function updateElementColors(svg) {
 // Create the element list and color picker UI
 function createColorControls(svg) {
     const controls = document.getElementById("color-controls");
-    controls.innerHTML = ""; // Clear existing controls
-    const list = document.createElement("ul");
-    list.className = "element-list";
+    const list = controls.querySelector(".element-list"); // Updated selector
+    list.innerHTML = ""; // Clear existing controls
     Object.keys(COLOR_GROUPS).forEach((id) => {
         const listItem = document.createElement("li");
         listItem.textContent = id;
@@ -92,7 +91,13 @@ function createColorControls(svg) {
         listItem.addEventListener("click", () => showColorPicker(id, svg));
         list.appendChild(listItem);
     });
-    controls.appendChild(list);
+    // Add toggle functionality
+    const toggleButton = controls.querySelector("#toggle-controls");
+    toggleButton.addEventListener("click", () => {
+        const isVisible = list.classList.contains("visible");
+        list.classList.toggle("visible");
+        toggleButton.textContent = isVisible ? "Show Colors" : "Hide Colors";
+    });
     // Create the color picker dialog (hidden by default)
     const dialog = document.createElement("div");
     dialog.id = "color-picker";
@@ -105,34 +110,45 @@ function createColorControls(svg) {
     const closeButton = dialog.querySelector("#close-picker");
     closeButton.addEventListener("click", () => dialog.classList.add("hidden"));
 }
-// Show the color picker for a specific element
+let currentlyHighlightedElement = null; // Track the highlighted element
 function showColorPicker(id, svg) {
     const dialog = document.getElementById("color-picker");
     const optionsContainer = dialog.querySelector(".color-options");
     optionsContainer.innerHTML = "";
+    // Remove highlight from previously highlighted element
+    if (currentlyHighlightedElement) {
+        currentlyHighlightedElement.classList.remove("highlight-pulse");
+    }
+    // Add highlight to the current target element
+    const targetElement = svg.querySelector(id);
+    if (targetElement) {
+        targetElement.classList.add("highlight-pulse");
+        currentlyHighlightedElement = targetElement; // Update tracking
+    }
+    else {
+        console.warn(`Element ${id} not found in SVG for highlighting`);
+    }
     COLORS.forEach((color) => {
         const option = document.createElement("div");
         option.className = "color-option";
         if (color === "#00000000") {
-            // Create a checkerboard pattern using nested divs
+            // Existing transparent checkerboard logic remains unchanged
             option.style.position = "relative";
-            option.style.backgroundColor = "#ffffff"; // White base
-            // Create checkerboard grid (2x2 pattern)
+            option.style.backgroundColor = "#ffffff";
             for (let i = 0; i < 4; i++) {
                 const square = document.createElement("div");
                 square.style.position = "absolute";
                 square.style.width = "50%";
                 square.style.height = "50%";
-                // Position squares in checkerboard pattern
                 if (i === 0) {
                     square.style.top = "0";
                     square.style.left = "0";
-                    square.style.backgroundColor = "#808080"; // Gray squares
+                    square.style.backgroundColor = "#808080";
                 }
                 else if (i === 1) {
                     square.style.top = "50%";
                     square.style.left = "50%";
-                    square.style.backgroundColor = "#808080"; // Gray squares
+                    square.style.backgroundColor = "#808080";
                 }
                 else if (i === 2) {
                     square.style.top = "50%";
@@ -152,11 +168,16 @@ function showColorPicker(id, svg) {
             colorGroups[id] = color;
             updateElementColors(svg);
             dialog.classList.add("hidden");
+            // Remove highlight when color is selected
+            if (currentlyHighlightedElement) {
+                currentlyHighlightedElement.classList.remove("highlight-pulse");
+                currentlyHighlightedElement = null;
+            }
         });
         optionsContainer.appendChild(option);
     });
     dialog.classList.remove("hidden");
-    // Position dialog near the clicked element
+    // Position dialog near the clicked element (existing logic)
     const items = document.querySelectorAll(".element-item");
     const clickedItem = Array.from(items).find((item) => item.textContent === id);
     if (clickedItem) {
@@ -164,6 +185,15 @@ function showColorPicker(id, svg) {
         dialog.style.top = `${rect.bottom + window.scrollY}px`;
         dialog.style.left = `${rect.left + window.scrollX}px`;
     }
+    // Add cleanup when closing via the close button
+    const closeButton = dialog.querySelector("#close-picker");
+    closeButton.onclick = () => {
+        dialog.classList.add("hidden");
+        if (currentlyHighlightedElement) {
+            currentlyHighlightedElement.classList.remove("highlight-pulse");
+            currentlyHighlightedElement = null;
+        }
+    };
 }
 // Initialize the application
 async function initialize() {

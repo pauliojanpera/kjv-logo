@@ -19,7 +19,7 @@
             font-family: Arial, sans-serif;
             min-height: 100dvh;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
             margin: 0;
             padding: 20px;
@@ -27,8 +27,9 @@
         }
 
         #svg-container {
+            flex-grow: 1; /* Allow SVG container to take available space */
             max-width: 100%;
-            max-height: 60vh;
+            max-height: 100vh; /* Adjusted to use full height */
             overflow: auto;
         }
 
@@ -38,16 +39,41 @@
         }
 
         #color-controls {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 300px;
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            margin-left: 20px; /* Changed from margin-top to margin-left */
+            width: 300px;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .controls-wrapper {
+            position: relative;
+        }
+
+        #toggle-controls {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid #231f20ff;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        #toggle-controls:hover {
+            background-color: #f0f0f0;
         }
 
         .element-list {
             list-style: none;
             padding: 0;
             border: 1px solid #231f20ff;
+            border-top: none; /* Avoid double border with toggle */
             background: rgba(255, 255, 255, 0.8);
+            display: none; /* Hidden by default */
+        }
+
+        .element-list.visible {
+            display: block; /* Show when toggled */
         }
 
         .element-item {
@@ -83,7 +109,7 @@
             height: 30px;
             border: 1px solid #ccc;
             cursor: pointer;
-            background-repeat: repeat; /* Ensure checkerboard tiles */
+            background-repeat: repeat;
         }
 
         .color-option:hover {
@@ -94,10 +120,35 @@
             display: block;
             margin: 0 auto;
         }
+
+        /* Existing styles remain unchanged, add this at the end of the style block */
+        @keyframes pulse {
+            0% {
+                stroke: red;
+                fill: red;
+            }
+            50% {
+                stroke: white;
+                fill: white;
+            }
+            100% {
+                stroke: red;
+                fill: red;
+            }
+        }
+
+        .highlight-pulse {
+            animation: pulse 2s infinite;
+        }
     </style>
 </head>
 <body>
+    <div id="color-controls">
+        <div class="controls-wrapper">
+            <button id="toggle-controls">Valitse värejä</button>
+            <ul class="element-list"></ul> <!-- Moved inside wrapper -->
+        </div>
+    </div>
     <div id="svg-container"></div>
-    <div id="color-controls"></div>
 </body>
 </html>
