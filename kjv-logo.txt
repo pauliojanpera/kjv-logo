@@ -1,6 +1,6 @@
 ===== README.md =====
 
-# KJV Logo Coloring
+# KJV logo
 
 A simple web application for coloring the KJV logo SVG. Users can reassign predefined color categories to different elements of the logo, with the SVG dynamically updating based on their selections. Built with TypeScript, this project leverages modern web standards and includes offline support via a service worker.
 
@@ -110,7 +110,7 @@ Feel free to fork and submit pull requests or open issues for bugs/features!
     "deploy": "./scripts/deploy.sh",
     "fetch": "./scripts/fetch_events.sh",
     "watch": "nodemon -e mts,json,html,png,sh --exec pnpm run build",
-    "report": "./scripts/files.sh README.md package.json tsconfig.json scripts/ src public/manifest.json public/index.html > kjv-logo.txt",
+    "report": "./scripts/files.sh README.md package.json tsconfig.json .github/workflows/static.yml scripts/ src public/manifest.json public/index.html > kjv-logo.txt",
     "start": "http-server public -P http://localhost:8080?"
   },
   "dependencies": {},
@@ -143,6 +143,58 @@ Feel free to fork and submit pull requests or open issues for bugs/features!
   "include": ["src/**/*.mts", "src/**/*.ts"],
   "exclude": []                        // Exclude unnecessary files (e.g., test files, node_modules)
 }
+
+-----
+
+===== .github/workflows/static.yml =====
+
+# Simple workflow for deploying static content to GitHub Pages
+name: Deploy static content to Pages
+
+on:
+  # Runs on pushes targeting the default branch
+  push:
+    branches: ["main"]
+
+  workflow_run:
+    workflows: ["Update Event Data"]
+    types:
+      - completed
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Single deploy job since we're just deploying
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './public'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
 -----
 
@@ -290,7 +342,7 @@ const COLORS: string[] = [
     "#231f20ff", // Black
     "#f3df59ff", // Yellow
     "#689674ff", // Green
-    "#ffffffff"  // White (new)
+    "#ffffffff"  // White
 ];
 
 // Define initial color assignments for SVG elements
@@ -374,28 +426,8 @@ function updateElementColors(svg: SVGSVGElement): void {
     });
 }
 
-// Create the element list and color picker UI
-function createColorControls(svg: SVGSVGElement): void {
-    const controls: HTMLElement = document.getElementById("color-controls")!;
-    const list: HTMLUListElement = controls.querySelector(".element-list")!; // Updated selector
-    list.innerHTML = ""; // Clear existing controls
-
-    Object.keys(COLOR_GROUPS).forEach((id: string) => {
-        const listItem: HTMLLIElement = document.createElement("li");
-        listItem.textContent = id;
-        listItem.className = "element-item";
-        listItem.addEventListener("click", () => showColorPicker(id, svg));
-        list.appendChild(listItem);
-    });
-
-    // Add toggle functionality
-    const toggleButton: HTMLButtonElement = controls.querySelector("#toggle-controls")!;
-    toggleButton.addEventListener("click", () => {
-        const isVisible = list.classList.contains("visible");
-        list.classList.toggle("visible");
-        toggleButton.textContent = isVisible ? "Show Colors" : "Hide Colors";
-    });
-
+// Set up color picker and SVG click handlers
+function setupColorPicker(svg: SVGSVGElement): void {
     // Create the color picker dialog (hidden by default)
     const dialog: HTMLDivElement = document.createElement("div");
     dialog.id = "color-picker";
@@ -408,6 +440,17 @@ function createColorControls(svg: SVGSVGElement): void {
 
     const closeButton: HTMLButtonElement = dialog.querySelector("#close-picker")!;
     closeButton.addEventListener("click", () => dialog.classList.add("hidden"));
+
+    // Add click event listeners to SVG elements
+    Object.keys(COLOR_GROUPS).forEach((id: string) => {
+        const element: SVGElement | null = svg.querySelector(id);
+        if (element) {
+            element.style.cursor = "pointer"; // Visual feedback
+            element.addEventListener("click", () => showColorPicker(id, svg));
+        } else {
+            console.warn(`Element ${id} not found in SVG for click listener`);
+        }
+    });
 }
 
 let currentlyHighlightedElement: SVGElement | null = null; // Track the highlighted element
@@ -436,7 +479,6 @@ function showColorPicker(id: string, svg: SVGSVGElement): void {
         option.className = "color-option";
         
         if (color === "#00000000") {
-            // Existing transparent checkerboard logic remains unchanged
             option.style.position = "relative";
             option.style.backgroundColor = "#ffffff";
             for (let i = 0; i < 4; i++) {
@@ -469,7 +511,6 @@ function showColorPicker(id: string, svg: SVGSVGElement): void {
             colorGroups[id] = color;
             updateElementColors(svg);
             dialog.classList.add("hidden");
-            // Remove highlight when color is selected
             if (currentlyHighlightedElement) {
                 currentlyHighlightedElement.classList.remove("highlight-pulse");
                 currentlyHighlightedElement = null;
@@ -480,16 +521,17 @@ function showColorPicker(id: string, svg: SVGSVGElement): void {
 
     dialog.classList.remove("hidden");
 
-    // Position dialog near the clicked element (existing logic)
-    const items = document.querySelectorAll(".element-item");
-    const clickedItem = Array.from(items).find((item) => item.textContent === id);
-    if (clickedItem) {
-        const rect = clickedItem.getBoundingClientRect();
+    // Position dialog near the SVG element
+    if (targetElement) {
+        const rect = targetElement.getBoundingClientRect();
         dialog.style.top = `${rect.bottom + window.scrollY}px`;
         dialog.style.left = `${rect.left + window.scrollX}px`;
+    } else {
+        dialog.style.top = "50%";
+        dialog.style.left = "50%";
+        dialog.style.transform = "translate(-50%, -50%)";
     }
 
-    // Add cleanup when closing via the close button
     const closeButton: HTMLButtonElement = dialog.querySelector("#close-picker")!;
     closeButton.onclick = () => {
         dialog.classList.add("hidden");
@@ -505,7 +547,7 @@ async function initialize(): Promise<void> {
     try {
         svgElement = await loadSVG();
         updateElementColors(svgElement); // Initial render
-        createColorControls(svgElement); // Build UI once
+        setupColorPicker(svgElement); // Set up color picker and click handlers
     } catch (error: unknown) {
         console.error("Error initializing:", error);
         const container: HTMLElement = document.getElementById("svg-container")!;
@@ -542,7 +584,7 @@ document.addEventListener("DOMContentLoaded", initialize);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KJV Logo Coloring</title>
+    <title>KJV logo</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icon-192.png">
     <script type="module" src="dist/kjv-logo.mjs"></script>
@@ -560,68 +602,22 @@ document.addEventListener("DOMContentLoaded", initialize);
             display: flex;
             flex-direction: row;
             align-items: center;
+            justify-content: center;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             box-sizing: border-box;
         }
 
         #svg-container {
-            flex-grow: 1; /* Allow SVG container to take available space */
+            flex-grow: 1;
             max-width: 100%;
-            max-height: 100vh; /* Adjusted to use full height */
+            max-height: 100vh;
             overflow: auto;
         }
 
         #svg-container svg {
             width: 100%;
             height: auto;
-        }
-
-        #color-controls {
-            position: absolute;
-            left: 10px;
-            top: 10px;
-            margin-left: 20px; /* Changed from margin-top to margin-left */
-            width: 300px;
-            flex-shrink: 0; /* Prevent shrinking */
-        }
-
-        .controls-wrapper {
-            position: relative;
-        }
-
-        #toggle-controls {
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid #231f20ff;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        #toggle-controls:hover {
-            background-color: #f0f0f0;
-        }
-
-        .element-list {
-            list-style: none;
-            padding: 0;
-            border: 1px solid #231f20ff;
-            border-top: none; /* Avoid double border with toggle */
-            background: rgba(255, 255, 255, 0.8);
-            display: none; /* Hidden by default */
-        }
-
-        .element-list.visible {
-            display: block; /* Show when toggled */
-        }
-
-        .element-item {
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        .element-item:hover {
-            background-color: #f0f0f0;
         }
 
         .color-picker {
@@ -660,7 +656,6 @@ document.addEventListener("DOMContentLoaded", initialize);
             margin: 0 auto;
         }
 
-        /* Existing styles remain unchanged, add this at the end of the style block */
         @keyframes pulse {
             0% {
                 stroke: red;
@@ -682,12 +677,6 @@ document.addEventListener("DOMContentLoaded", initialize);
     </style>
 </head>
 <body>
-    <div id="color-controls">
-        <div class="controls-wrapper">
-            <button id="toggle-controls">Valitse värejä</button>
-            <ul class="element-list"></ul> <!-- Moved inside wrapper -->
-        </div>
-    </div>
     <div id="svg-container"></div>
 </body>
 </html>
