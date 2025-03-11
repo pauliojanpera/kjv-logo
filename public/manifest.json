@@ -1,0 +1,15 @@
+{
+    "name": "KJV logo",
+    "short_name": "KJV logo",
+    "start_url": "/kjv-logo",
+    "display": "standalone",
+    "background_color": "#bfd5e2ff",
+    "theme_color": "#689674ff",
+    "icons": [
+      {
+        "src": "icon-192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      }
+    ]
+  }
