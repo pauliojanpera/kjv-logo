@@ -8,7 +8,7 @@ const COLORS = [
     "#231f20ff", // Black
     "#f3df59ff", // Yellow
     "#689674ff", // Green
-    "#ffffffff" // White (new)
+    "#ffffffff" // White
 ];
 const COLOR_GROUPS = {
     "#waves": "#434b72ff", // Dark blue
@@ -79,25 +79,8 @@ function updateElementColors(svg) {
         }
     });
 }
-// Create the element list and color picker UI
-function createColorControls(svg) {
-    const controls = document.getElementById("color-controls");
-    const list = controls.querySelector(".element-list"); // Updated selector
-    list.innerHTML = ""; // Clear existing controls
-    Object.keys(COLOR_GROUPS).forEach((id) => {
-        const listItem = document.createElement("li");
-        listItem.textContent = id;
-        listItem.className = "element-item";
-        listItem.addEventListener("click", () => showColorPicker(id, svg));
-        list.appendChild(listItem);
-    });
-    // Add toggle functionality
-    const toggleButton = controls.querySelector("#toggle-controls");
-    toggleButton.addEventListener("click", () => {
-        const isVisible = list.classList.contains("visible");
-        list.classList.toggle("visible");
-        toggleButton.textContent = isVisible ? "Show Colors" : "Hide Colors";
-    });
+// Set up color picker and SVG click handlers
+function setupColorPicker(svg) {
     // Create the color picker dialog (hidden by default)
     const dialog = document.createElement("div");
     dialog.id = "color-picker";
@@ -109,6 +92,17 @@ function createColorControls(svg) {
     document.body.appendChild(dialog);
     const closeButton = dialog.querySelector("#close-picker");
     closeButton.addEventListener("click", () => dialog.classList.add("hidden"));
+    // Add click event listeners to SVG elements
+    Object.keys(COLOR_GROUPS).forEach((id) => {
+        const element = svg.querySelector(id);
+        if (element) {
+            element.style.cursor = "pointer"; // Visual feedback
+            element.addEventListener("click", () => showColorPicker(id, svg));
+        }
+        else {
+            console.warn(`Element ${id} not found in SVG for click listener`);
+        }
+    });
 }
 let currentlyHighlightedElement = null; // Track the highlighted element
 function showColorPicker(id, svg) {
@@ -132,7 +126,6 @@ function showColorPicker(id, svg) {
         const option = document.createElement("div");
         option.className = "color-option";
         if (color === "#00000000") {
-            // Existing transparent checkerboard logic remains unchanged
             option.style.position = "relative";
             option.style.backgroundColor = "#ffffff";
             for (let i = 0; i < 4; i++) {
@@ -168,7 +161,6 @@ function showColorPicker(id, svg) {
             colorGroups[id] = color;
             updateElementColors(svg);
             dialog.classList.add("hidden");
-            // Remove highlight when color is selected
             if (currentlyHighlightedElement) {
                 currentlyHighlightedElement.classList.remove("highlight-pulse");
                 currentlyHighlightedElement = null;
@@ -177,15 +169,17 @@ function showColorPicker(id, svg) {
         optionsContainer.appendChild(option);
     });
     dialog.classList.remove("hidden");
-    // Position dialog near the clicked element (existing logic)
-    const items = document.querySelectorAll(".element-item");
-    const clickedItem = Array.from(items).find((item) => item.textContent === id);
-    if (clickedItem) {
-        const rect = clickedItem.getBoundingClientRect();
+    // Position dialog near the SVG element
+    if (targetElement) {
+        const rect = targetElement.getBoundingClientRect();
         dialog.style.top = `${rect.bottom + window.scrollY}px`;
         dialog.style.left = `${rect.left + window.scrollX}px`;
     }
-    // Add cleanup when closing via the close button
+    else {
+        dialog.style.top = "50%";
+        dialog.style.left = "50%";
+        dialog.style.transform = "translate(-50%, -50%)";
+    }
     const closeButton = dialog.querySelector("#close-picker");
     closeButton.onclick = () => {
         dialog.classList.add("hidden");
@@ -200,7 +194,7 @@ async function initialize() {
     try {
         svgElement = await loadSVG();
         updateElementColors(svgElement); // Initial render
-        createColorControls(svgElement); // Build UI once
+        setupColorPicker(svgElement); // Set up color picker and click handlers
     }
     catch (error) {
         console.error("Error initializing:", error);

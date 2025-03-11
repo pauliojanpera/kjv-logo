@@ -1,4 +1,4 @@
-# KJV Logo Coloring
+# KJV logo
 
 A simple web application for coloring the KJV logo SVG. Users can reassign predefined color categories to different elements of the logo, with the SVG dynamically updating based on their selections. Built with TypeScript, this project leverages modern web standards and includes offline support via a service worker.
 

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KJV Logo Coloring</title>
+    <title>KJV logo</title>
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icon-192.png">
     <script type="module" src="dist/kjv-logo.mjs"></script>
@@ -21,68 +21,22 @@
             display: flex;
             flex-direction: row;
             align-items: center;
+            justify-content: center;
             margin: 0;
             padding: 20px;
             box-sizing: border-box;
         }
 
         #svg-container {
-            flex-grow: 1; /* Allow SVG container to take available space */
+            flex-grow: 1;
             max-width: 100%;
-            max-height: 100vh; /* Adjusted to use full height */
+            max-height: 100vh;
             overflow: auto;
         }
 
         #svg-container svg {
             width: 100%;
             height: auto;
-        }
-
-        #color-controls {
-            position: absolute;
-            left: 10px;
-            top: 10px;
-            margin-left: 20px; /* Changed from margin-top to margin-left */
-            width: 300px;
-            flex-shrink: 0; /* Prevent shrinking */
-        }
-
-        .controls-wrapper {
-            position: relative;
-        }
-
-        #toggle-controls {
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            border: 1px solid #231f20ff;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        #toggle-controls:hover {
-            background-color: #f0f0f0;
-        }
-
-        .element-list {
-            list-style: none;
-            padding: 0;
-            border: 1px solid #231f20ff;
-            border-top: none; /* Avoid double border with toggle */
-            background: rgba(255, 255, 255, 0.8);
-            display: none; /* Hidden by default */
-        }
-
-        .element-list.visible {
-            display: block; /* Show when toggled */
-        }
-
-        .element-item {
-            padding: 10px;
-            cursor: pointer;
-        }
-
-        .element-item:hover {
-            background-color: #f0f0f0;
         }
 
         .color-picker {
@@ -121,7 +75,6 @@
             margin: 0 auto;
         }
 
-        /* Existing styles remain unchanged, add this at the end of the style block */
         @keyframes pulse {
             0% {
                 stroke: red;
@@ -143,12 +96,6 @@
     </style>
 </head>
 <body>
-    <div id="color-controls">
-        <div class="controls-wrapper">
-            <button id="toggle-controls">Valitse värejä</button>
-            <ul class="element-list"></ul> <!-- Moved inside wrapper -->
-        </div>
-    </div>
     <div id="svg-container"></div>
 </body>
 </html>
