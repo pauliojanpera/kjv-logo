@@ -1,57 +1,59 @@
-\# KJV Logo Coloring
+# KJV Logo Coloring
 
 A simple web application for coloring the KJV logo SVG. Users can reassign predefined color categories to different elements of the logo, with the SVG dynamically updating based on their selections. Built with TypeScript, this project leverages modern web standards and includes offline support via a service worker.
 
-\#\# Features
-- Display and scale the \`kjv-logo.svg\` to fit the browser window.
-- Six fixed color categories (dark blue, light blue, transparent, black, yellow, green) assignable to SVG elements.
-- Interactive UI with multi-select dropdowns for color reassignment.
+## Features
+- Display and scale the `kjv-logo.svg` to fit the browser window.
+- Seven fixed colors (dark blue, light blue, transparent, black, yellow, green, white) assignable to SVG elements.
+- Interactive UI with a list of element IDs; click an ID to open a color picker dialog.
 - Offline caching using a service worker.
 - TypeScript-based with strict type checking.
 
-\#\# Prerequisites
-- \[Node.js\](https://nodejs.org/) (v16 or later recommended)
-- \[pnpm\](https://pnpm.io/) (installed globally: \`npm install -g pnpm\`)
+## Prerequisites
+- [Node.js](https://nodejs.org/) (v16 or later recommended)
+- [pnpm](https://pnpm.io/) (installed globally: `npm install -g pnpm`)
 
-\#\# Installation
-1. \*\*Clone the repository\*\*:
-   \`\`\`bash
+## Installation
+1. **Clone the repository**:
+   ```bash
    git clone <repository-url>
    cd kjv-logo-coloring
-   \`\`\`
+   ```
 
-2. \*\*Install dependencies\*\*:
-   \`\`\`bash
+2. **Install dependencies**:
+   ```bash
    pnpm install
-   \`\`\`
+   ```
 
-\#\# Usage
-1. \*\*Build the project\*\*:
-   \`\`\`bash
+## Usage
+1. **Build the project**:
+   ```bash
    pnpm run build
-   \`\`\`
-   This compiles the TypeScript files (\`.mts\`) to JavaScript (\`.mjs\`) and adjusts the service worker output.
+   ```
+   This compiles the TypeScript files (`.mts`) to JavaScript (`.mjs`) and adjusts the service worker output.
 
-2. \*\*Serve the application\*\*:
+2. **Serve the application**:
    Start the static server to view the app:
-   \`\`\`bash
+   ```bash
    pnpm start
-   \`\`\`
-   Open your browser to \`http://localhost:8080\`.
+   ```
+   Open your browser to `http://localhost:8080`.
 
-3. \*\*Interact with the app\*\*:
+3. **Interact with the app**:
+3. **Interact with the app**:
    - The SVG will load and scale to fit the window.
-   - Use the dropdowns under \`#color-controls\` to reassign colors to SVG elements (e.g., move \`#waves\` from dark blue to yellow).
+   - Click an element ID in the list under `#color-controls` (e.g., `#waves`) to open a color picker.
+   - Select one of the 7 colors from the pop-up dialog to reassign it to the element.
    - Changes update the SVG in real-time.
 
-4. \*\*Deploy (optional)\*\*:
-   \`\`\`bash
+4. **Deploy (optional)**:
+   ```bash
    pnpm run deploy "Your commit message"
-   \`\`\`
-   This builds the project, commits changes, and pushes to the \`main\` branch. Adjust \`scripts/deploy.sh\` if your remote or branch differs.
+   ```
+   This builds the project, commits changes, and pushes to the `main` branch. Adjust `scripts/deploy.sh` if your remote or branch differs.
 
-\#\# Project Structure
-\`\`\`
+## Project Structure
+```
 kjv-logo-coloring/
 ├── public/              # Static assets
 │   ├── data/            # SVG file location
@@ -68,27 +70,27 @@ kjv-logo-coloring/
 ├── package.json         # Dependencies and scripts
 ├── tsconfig.json        # TypeScript configuration
 └── README.md            # This file
-\`\`\`
+```
 
-\#\# Development
-- \*\*Watch mode\*\*: Rebuilds on file changes:
-  \`\`\`bash
+## Development
+- **Watch mode**: Rebuilds on file changes:
+  ```bash
   pnpm run watch
-  \`\`\`
-- \*\*TypeScript\*\*: Uses \`module: "NodeNext"\` and \`target: "esnext"\` with strict type checking.
-- \*\*Dependencies\*\*:
-  - \`typescript\`: For compilation.
-  - \`tsc-alias\`: Resolves \`@/*\` aliases in \`src/\`.
-  - \`nodemon\`: Watches for changes in development.
-  - \`http-server\`: Serves the static app locally.
+  ```
+- **TypeScript**: Uses `module: "NodeNext"` and `target: "esnext"` with strict type checking.
+- **Dependencies**:
+  - `typescript`: For compilation.
+  - `tsc-alias`: Resolves `@/*` aliases in `src/`.
+  - `nodemon`: Watches for changes in development.
+  - `http-server`: Serves the static app locally.
 
-\#\# Notes
-- The app relies on \`kjv-logo.svg\` having elements matching the IDs in \`COLOR_GROUPS\` (\`#waves\`, \`#sky\`, etc.).
+## Notes
+- The app relies on `kjv-logo.svg` having elements matching the IDs in `COLOR_GROUPS` (`#waves`, `#sky`, etc.).
 - Colors are fixed but can be reassigned to any SVG element via the UI.
 - Offline support is provided by the service worker, caching the SVG, HTML, and JS.
 
-\#\# License
-This project is unlicensed by default. Add a \`LICENSE\` file if you wish to specify terms.
+## License
+This project is unlicensed by default. Add a `LICENSE` file if you wish to specify terms.
 
-\#\# Contributing
+## Contributing
 Feel free to fork and submit pull requests or open issues for bugs/features!
