@@ -93,3 +93,17 @@ Lean but mean—this is built to roar:
 - **Format**: Use clear headings, bullet points, and minimal code snippets (only when essential for clarity).
 - **Scope**: Align with the project’s lean, modern ethos—prioritize practicality over verbosity.
 - **User Updates**: If the user modifies files (e.g., "I updated X"), acknowledge and integrate their changes into the current state description without duplicating their work.
+
+## Report Script Purpose
+- **Script**: `pnpm run report` runs `./scripts/files.sh` with essential project files, outputting to `kjv-logo.txt`.
+- **Purpose**: Aggregates key project contents (docs, configs, source, workflows, static assets) into a single file for Grok 3’s consumption.
+- **Files Included**:
+  - `README.md`, `REFERENCE.md`: Project documentation.
+  - `package.json`, `tsconfig.json`: Build and dependency configuration.
+  - `.github/workflows/static.yml`: GitHub Actions deployment workflow.
+  - `scripts/`: Build and utility scripts (recursive).
+  - `src/`: TypeScript source files (recursive).
+  - `public/kjv-logo/manifest.json`, `public/kjv-logo/index.html`: Core static assets.
+- **Output Format**: Single text file (`kjv-logo.txt`) with file contents prefixed by `===== path =====` and separated by `-----`.
+- **Usage**: Run manually via `pnpm run report` to generate the snapshot for Grok analysis.
+- **Notes**: Overwrites `kjv-logo.txt` on each run.

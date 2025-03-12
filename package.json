@@ -9,7 +9,7 @@
     "fetch": "./scripts/fetch_events.sh",
     "watch": "nodemon -e mts,json,html,png,sh --exec pnpm run build",
     "report": "./scripts/files.sh README.md REFERENCE.md package.json tsconfig.json .github/workflows/static.yml scripts/ src public/kjv-logo/manifest.json public/kjv-logo/index.html > kjv-logo.txt",
-    "start": "http-server public/kjv-logo -p 8080 --cors -c-1"
+    "start": "http-server public -p 8080 --cors -c-1"
   },
   "dependencies": {},
   "devDependencies": {

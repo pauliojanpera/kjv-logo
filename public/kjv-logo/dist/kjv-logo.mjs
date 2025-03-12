@@ -190,7 +190,7 @@ function showColorPicker(id, svg) {
     };
 }
 // Cache name with UUID placeholder (replaced at build time)
-const CACHE_NAME = "kjv-logo-aa0ce1ae-e282-423c-b4e0-d513fe568712";
+const CACHE_NAME = "kjv-logo-24464152-bd36-486c-8ee9-783268b782a5";
 // Register service worker with force update
 async function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
