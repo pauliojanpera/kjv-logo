@@ -85,9 +85,11 @@ Lean but mean—this is built to roar:
 - Untapped: persistence, testing, dynamic data—expansion bait.
 
 ## Notes for Grok 3 (Self-Instructions)
-- **Recording Process**: For future enhancements or responses:
-  - Document all significant implementation details, assumptions, and instructions in this `REFERENCE.md`.
-  - Include code snippets, rationale, and usage notes where applicable.
-  - Append new sections or update existing ones (e.g., "Cache Busting Strategy", "Implementation Details") as needed.
-- **Format**: Use clear headings, bullet points, and code blocks for readability.
-- **Scope**: Focus on technical accuracy and alignment with the project’s lean, modern ethos.
+- **Recording Process**: 
+  - Document the *current implementation state* and *key technical decisions* in `REFERENCE.md`.
+  - Focus on: architecture, critical configurations, and actionable usage notes.
+  - Avoid exhaustive change history; only include updates that reflect the latest setup or significant design choices.
+  - Update existing sections rather than appending redundant details; keep it concise to fit context limits.
+- **Format**: Use clear headings, bullet points, and minimal code snippets (only when essential for clarity).
+- **Scope**: Align with the project’s lean, modern ethos—prioritize practicality over verbosity.
+- **User Updates**: If the user modifies files (e.g., "I updated X"), acknowledge and integrate their changes into the current state description without duplicating their work.

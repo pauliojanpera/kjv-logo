@@ -1,7 +1,7 @@
 {
     "name": "KJV logo",
     "short_name": "KJV logo",
-    "start_url": "/kjv-logo",
+    "start_url": "./",
     "display": "standalone",
     "background_color": "#bfd5e2ff",
     "theme_color": "#689674ff",

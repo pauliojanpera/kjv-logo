@@ -1,5 +1,5 @@
 // Cache name with UUID placeholder (replaced at build time)
-const CACHE_NAME = "kjv-logo-f22caeef-9caa-417b-a911-a560774857c9";
+const CACHE_NAME = "kjv-logo-CACHE_UUID";
 const URLS_TO_CACHE = [
     "index.html",
     "dist/kjv-logo.mjs",
@@ -45,4 +45,4 @@ self.addEventListener("message", (event) => {
         self.skipWaiting();
     }
 });
-
+export {};
